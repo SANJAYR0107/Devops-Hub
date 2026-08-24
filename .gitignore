@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+workspace/
+dist/
+build/
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
