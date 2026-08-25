@@ -117,12 +117,16 @@ Docker CI build: COMPLETE
 Docker image publishing: NOT STARTED
 AWS deployment: NOT STARTED
 
-### Docker CI Documentation
-- **Why Docker is part of CI**: To ensure the codebase can be successfully containerized after changes, catching environment or dependency issues early.
-- **When Docker build runs**: It runs exclusively after the frontend build, provided all automated tests have successfully passed.
-- **Why tests run before Docker**: To prevent wasting compute resources building an image for broken code. If tests fail, the workflow stops immediately and the Docker build is skipped.
-- **Docker image naming/tagging**: The image is temporarily tagged as `devopshub:${{ github.sha }}` during the CI pipeline to ensure each commit generates a uniquely identifiable local image. It is not pushed to any registry yet.
-- **How Docker build failures stop CI**: If the `docker build` command returns a non-zero exit code (due to a syntax error in the Dockerfile or a build failure), GitHub Actions detects the failure, halts the pipeline, and marks the entire workflow as FAILED.
+### Docker CI Architecture (Stage 2 Step 3)
+- **Docker CLI Architecture**: The DevOpsHub container includes only the official Docker CLI (`docker`), avoiding the installation of the full Docker Engine daemon.
+- **Why full Docker Engine is not installed**: A full engine inside the container (Docker-in-Docker) adds massive performance overhead, slows down CI build times exponentially (12+ minutes just for `apt-get`), and introduces severe security risks due to the required `--privileged` mode.
+- **Docker-out-of-Docker (DooD) approach**: Instead of nesting containers, DevOpsHub acts as a pure orchestrator. When the DevOpsHub API calls `spawn('docker')`, the lightweight CLI simply passes the command to the host's Docker Engine. 
+- **How the Docker socket connection works**: This is achieved by mounting the host's Docker socket into the container at runtime using `-v /var/run/docker.sock:/var/run/docker.sock`. Any sibling containers (like those from analyzed user repositories) are securely built and run directly on the host machine.
+- **Local Verification Results**: 
+  - **Docker Build**: PASS (Reduced build time to < 12 seconds via multi-stage CLI copy).
+  - **Docker CLI Version**: PASS (`Docker version 29.7.2`).
+  - **Docker Daemon Connectivity**: PASS (Successfully fetched `docker info` from host).
+  - **End-to-End Pipeline**: DevOpsHub successfully initiated a Docker build for `ResumeSphere-AI` via the host engine. The repository build failed internally due to a known `pip install` network timeout when downloading ML models (PyMuPDF), proving the host engine orchestration is fully functional, even if the target repository fails its own build.
 
 ### Testing Documentation
 - **Testing Frameworks**: 

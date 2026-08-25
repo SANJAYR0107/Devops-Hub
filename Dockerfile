@@ -3,8 +3,8 @@ FROM node:20
 
 WORKDIR /app
 
-# Install Docker CLI so the backend can run docker commands
-RUN apt-get update && apt-get install -y docker.io
+# Install Docker CLI from official image
+COPY --from=docker:cli /usr/local/bin/docker /usr/local/bin/
 
 # Setup backend
 COPY backend/package*.json ./backend/
