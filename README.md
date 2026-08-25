@@ -108,14 +108,26 @@ Initial commit: YES
 
 Stage 1 — COMPLETE ✅
 
-## Stage 2 — Step 1
-GitHub repository: COMPLETE
-GitHub Actions CI workflow: IMPLEMENTED
-Automated dependency installation: COMPLETE
-Automated tests: NOT AVAILABLE
-Automated build: COMPLETE
+## Stage 2 — Step 2
+Backend automated tests: COMPLETE
+Frontend automated tests: COMPLETE
+CI test execution: COMPLETE
+Intentional failure test: VERIFIED
 Docker CI build: NOT STARTED
 AWS deployment: NOT STARTED
+
+### Testing Documentation
+- **Testing Frameworks**: 
+  - Backend: Node.js built-in native test runner (`node:test` and `node:assert`).
+  - Frontend: `vitest` with `@testing-library/react`.
+- **What is tested**:
+  - Backend: GitHub URL validation logic and Analyzer Service technology detection logic (mocking the filesystem for Node.js, React, Python, Java, and Dockerfile detection).
+  - Frontend: DevOpsHub main dashboard rendering, presence of GitHub repository input, Analyze button, and URL input interaction.
+- **How to run tests locally**:
+  - Backend: `cd backend && npm test`
+  - Frontend: `cd frontend && npm test`
+- **How GitHub Actions runs them**:
+  - The `.github/workflows/ci.yml` pipeline checks out the repository, sets up Node.js, installs dependencies (`npm ci`), and sequentially runs `npm test` in the `backend` and `frontend` directories before building the frontend. Test failures will immediately halt and fail the CI workflow.
 
 ## Known Limitations
 - Stage 1 is fully local and does not deploy to production.

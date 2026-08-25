@@ -22,9 +22,17 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
+      - name: Backend - Run Tests
+        working-directory: ./backend
+        run: npm test
+
       - name: Frontend - Install Dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: Frontend - Run Tests
+        working-directory: ./frontend
+        run: npm test
 
       - name: Frontend - Build
         working-directory: ./frontend
