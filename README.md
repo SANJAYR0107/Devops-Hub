@@ -128,6 +128,22 @@ AWS deployment: NOT STARTED
   - **Docker Daemon Connectivity**: PASS (Successfully fetched `docker info` from host).
   - **End-to-End Pipeline**: DevOpsHub successfully initiated a Docker build for `ResumeSphere-AI` via the host engine. The repository build failed internally due to a known `pip install` network timeout when downloading ML models (PyMuPDF), proving the host engine orchestration is fully functional, even if the target repository fails its own build.
 
+## Stage 2 — Step 4
+Docker CI build: COMPLETE
+Docker Hub authentication: COMPLETE
+Docker image publishing: COMPLETE
+SHA image tagging: COMPLETE
+Docker Hub pull verification: FAILED (Awaiting Secret configuration)
+AWS/ECR: NOT STARTED
+Production deployment: NOT STARTED
+
+### Docker Hub Publishing Architecture
+- **Docker Hub Repository**: Images are published to `sanjayr0107/devopshub`.
+- **Image Naming & SHA Tagging**: Every build is uniquely tagged with the immutable Git commit SHA (e.g., `sanjayr0107/devopshub:<commit-sha>`). This allows strict traceability between deployed code and source commits. A `latest` tag is also published for convenience.
+- **GitHub Secrets**: The pipeline authenticates to Docker Hub using official Actions via `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+- **Security**: Credentials are NEVER stored in code, `.env` files, or passed via plain text command line arguments (`docker login -p`). Storing them exclusively as GitHub Secrets ensures they are redacted from CI logs and never exposed in version control.
+- **Pulling the Image**: Once secrets are configured, the published image can be pulled using: `docker pull sanjayr0107/devopshub:<commit-sha>`
+
 ### Testing Documentation
 - **Testing Frameworks**: 
   - Backend: Node.js built-in native test runner (`node:test` and `node:assert`).
