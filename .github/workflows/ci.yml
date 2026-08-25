@@ -41,8 +41,8 @@ jobs:
       - name: Docker Build
         run: |
           docker build -t devopshub:${{ github.sha }} .
-          docker tag devopshub:${{ github.sha }} SANJAYR0107/devopshub:${{ github.sha }}
-          docker tag devopshub:${{ github.sha }} SANJAYR0107/devopshub:latest
+          docker tag devopshub:${{ github.sha }} sanjayr0107/devopshub:${{ github.sha }}
+          docker tag devopshub:${{ github.sha }} sanjayr0107/devopshub:latest
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -52,5 +52,5 @@ jobs:
 
       - name: Docker Push
         run: |
-          docker push SANJAYR0107/devopshub:${{ github.sha }}
-          docker push SANJAYR0107/devopshub:latest
+          docker push sanjayr0107/devopshub:${{ github.sha }}
+          docker push sanjayr0107/devopshub:latest
