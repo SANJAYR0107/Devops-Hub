@@ -108,13 +108,21 @@ Initial commit: YES
 
 Stage 1 — COMPLETE ✅
 
-## Stage 2 — Step 2
-Backend automated tests: COMPLETE
-Frontend automated tests: COMPLETE
-CI test execution: COMPLETE
-Intentional failure test: VERIFIED
-Docker CI build: NOT STARTED
+## Stage 2 — Step 3
+GitHub Actions CI: COMPLETE
+Backend tests: COMPLETE
+Frontend tests: COMPLETE
+Frontend build: COMPLETE
+Docker CI build: COMPLETE
+Docker image publishing: NOT STARTED
 AWS deployment: NOT STARTED
+
+### Docker CI Documentation
+- **Why Docker is part of CI**: To ensure the codebase can be successfully containerized after changes, catching environment or dependency issues early.
+- **When Docker build runs**: It runs exclusively after the frontend build, provided all automated tests have successfully passed.
+- **Why tests run before Docker**: To prevent wasting compute resources building an image for broken code. If tests fail, the workflow stops immediately and the Docker build is skipped.
+- **Docker image naming/tagging**: The image is temporarily tagged as `devopshub:${{ github.sha }}` during the CI pipeline to ensure each commit generates a uniquely identifiable local image. It is not pushed to any registry yet.
+- **How Docker build failures stop CI**: If the `docker build` command returns a non-zero exit code (due to a syntax error in the Dockerfile or a build failure), GitHub Actions detects the failure, halts the pipeline, and marks the entire workflow as FAILED.
 
 ### Testing Documentation
 - **Testing Frameworks**: 
