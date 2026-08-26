@@ -138,11 +138,11 @@ AWS/ECR: NOT STARTED
 Production deployment: NOT STARTED
 
 ### Docker Hub Publishing Architecture
-- **Docker Hub Repository**: Images are published to `sanjayr0107/devopshub`.
-- **Image Naming & SHA Tagging**: Every build is uniquely tagged with the immutable Git commit SHA (e.g., `sanjayr0107/devopshub:<commit-sha>`). This allows strict traceability between deployed code and source commits. A `latest` tag is also published for convenience.
+- **Docker Hub Repository**: Images are published to `s029/devopshub`.
+- **Image Naming & SHA Tagging**: Every build is uniquely tagged with the immutable Git commit SHA (e.g., `s029/devopshub:<commit-sha>`). This allows strict traceability between deployed code and source commits. A `latest` tag is also published for convenience.
 - **GitHub Secrets**: The pipeline authenticates to Docker Hub using official Actions via `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - **Security**: Credentials are NEVER stored in code, `.env` files, or passed via plain text command line arguments (`docker login -p`). Storing them exclusively as GitHub Secrets ensures they are redacted from CI logs and never exposed in version control.
-- **Pulling the Image**: Once secrets are configured, the published image can be pulled using: `docker pull sanjayr0107/devopshub:<commit-sha>`
+- **Pulling the Image**: Once secrets are configured, the published image can be pulled using: `docker pull s029/devopshub:<commit-sha>`
 
 ### Testing Documentation
 - **Testing Frameworks**: 
