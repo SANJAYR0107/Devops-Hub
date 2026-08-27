@@ -133,16 +133,22 @@ Docker CI build: COMPLETE
 Docker Hub authentication: COMPLETE
 Docker image publishing: COMPLETE
 SHA image tagging: COMPLETE
-Docker Hub pull verification: FAILED (Awaiting Secret configuration)
+Docker Hub pull verification: COMPLETE
 AWS/ECR: NOT STARTED
 Production deployment: NOT STARTED
+
+Stage 2 Step 4 — Docker Hub Publishing: COMPLETED ✅
+
+Verification:
+GitHub Actions → Docker Build → Docker Hub Login → Docker Push → Docker Pull: SUCCESS
 
 ### Docker Hub Publishing Architecture
 - **Docker Hub Repository**: Images are published to `s029/devopshub`.
 - **Image Naming & SHA Tagging**: Every build is uniquely tagged with the immutable Git commit SHA (e.g., `s029/devopshub:<commit-sha>`). This allows strict traceability between deployed code and source commits. A `latest` tag is also published for convenience.
 - **GitHub Secrets**: The pipeline authenticates to Docker Hub using official Actions via `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - **Security**: Credentials are NEVER stored in code, `.env` files, or passed via plain text command line arguments (`docker login -p`). Storing them exclusively as GitHub Secrets ensures they are redacted from CI logs and never exposed in version control.
-- **Pulling the Image**: Once secrets are configured, the published image can be pulled using: `docker pull s029/devopshub:<commit-sha>`
+- **Pulling the Image**: The published image can be successfully pulled using `docker pull s029/devopshub:latest` or `docker pull s029/devopshub:<commit-sha>`. Local pull verification succeeded.
+- **CI Verification**: GitHub Actions CI workflow successfully passed all stages (tests, Docker build, and Docker push). Note: Node.js 20 deprecation warnings in the workflow are safely ignored and do not affect CI success.
 
 ### Testing Documentation
 - **Testing Frameworks**: 
