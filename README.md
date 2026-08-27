@@ -150,6 +150,20 @@ GitHub Actions → Docker Build → Docker Hub Login → Docker Push → Docker 
 - **Pulling the Image**: The published image can be successfully pulled using `docker pull s029/devopshub:latest` or `docker pull s029/devopshub:<commit-sha>`. Local pull verification succeeded.
 - **CI Verification**: GitHub Actions CI workflow successfully passed all stages (tests, Docker build, and Docker push). Note: Node.js 20 deprecation warnings in the workflow are safely ignored and do not affect CI success.
 
+## Stage 2 — Step 5
+AWS credentials setup: COMPLETE
+ECR login: COMPLETE
+Docker image tagging for ECR: COMPLETE
+Docker image pushing to ECR: PENDING VERIFICATION
+AWS ECS/EC2: NOT STARTED
+
+Stage 2 Step 5 — AWS/ECR Integration: CONFIGURATION COMPLETE ⏳
+
+### AWS ECR Integration Architecture
+- **Authentication**: Uses `aws-actions/configure-aws-credentials@v4` with GitHub Secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`).
+- **Registry Login**: Uses `aws-actions/amazon-ecr-login@v2` to securely obtain the ECR registry URI and login dynamically.
+- **Image Naming & Tagging**: The Docker image is tagged with the unique Git commit SHA (`$ECR_REGISTRY/devopshub:<commit-sha>`) and `latest` before pushing. This keeps synchronization between Docker Hub and AWS ECR.
+
 ### Testing Documentation
 - **Testing Frameworks**: 
   - Backend: Node.js built-in native test runner (`node:test` and `node:assert`).
