@@ -189,6 +189,13 @@ Workspace Cleanup        ✅ COMPLETE
 Dynamic Port Allocation  ✅ COMPLETE
 Reliability Verification ✅ COMPLETE
 
+### Async Architecture (BullMQ + Redis + SSE)
+- **BullMQ async job processing is implemented:** The DevOps pipeline is no longer synchronously tied to the HTTP request lifecycle.
+- **Redis is used as the queue backend:** Serves as the state store and message broker for the BullMQ queue (`pipeline-queue`).
+- **SSE provides real-time pipeline logs:** Granular `stdout`/`stderr` from the background Docker tasks are streamed to the frontend via Server-Sent Events on `/stream/:jobId`.
+- **POST `/analyze` is non-blocking:** Instantly returns a `jobId` (`202 Accepted`) instead of keeping the connection open for minutes during heavy builds.
+- **Background worker executes the Docker pipeline:** A detached BullMQ `Worker` orchestrates the Git cloning, Code analysis, Docker build, and container execution.
+
 ## Roadmap
 - **Stage 2**: AWS ECS & ECR integration.
 - **Stage 3**: CI/CD via GitHub Actions.

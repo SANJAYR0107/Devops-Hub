@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { isValidGithubUrl } = require('../utils/validation');
-const { cloneRepository, cleanupWorkspace } = require('../services/gitService');
-const { analyzeRepository } = require('../services/analyzerService');
-const { buildDockerImage, runDockerContainer } = require('../services/dockerService');
+const { pipelineQueue } = require('../services/jobQueue');
+const sseService = require('../services/sseService');
 
 /**
  * @route POST /api/repository/analyze
- * @description Validates, clones, analyzes, builds, and runs the repository
+ * @description Validates URL, enqueues the job, and returns the jobId
  */
 router.post('/analyze', async (req, res) => {
     const { repositoryUrl } = req.body;
@@ -20,59 +19,25 @@ router.post('/analyze', async (req, res) => {
         return res.status(400).json({ error: 'Invalid GitHub repository URL' });
     }
 
-    let clonedPath = null;
     try {
-        // Feature 3: Clone Repository
-        clonedPath = await cloneRepository(repositoryUrl);
-
-        // Feature 4 & 5: Analyze Repository & Docker Detection
-        const analysis = analyzeRepository(clonedPath);
-
-        const urlParts = repositoryUrl.split('/');
-        const projectName = urlParts[urlParts.length - 1].replace('.git', '');
-
-        let dockerStatus = 'Not Started';
-        let containerStatus = 'Not Started';
-        let imageTag = null;
-        let containerId = null;
-        let containerPort = null;
-
-        if (analysis.dockerfileExists) {
-            // Feature 6: Docker Build
-            dockerStatus = 'Building';
-            imageTag = await buildDockerImage(clonedPath, projectName);
-            dockerStatus = 'SUCCESS';
-
-            // Feature 7: Docker Run
-            containerStatus = 'Starting';
-            const runResult = await runDockerContainer(imageTag, projectName);
-            containerId = runResult.containerId;
-            containerPort = runResult.port;
-            containerStatus = 'RUNNING';
-        } else {
-            dockerStatus = 'Skipped (No Dockerfile)';
-        }
-
-        return res.status(200).json({
-            message: 'Pipeline completed',
-            repositoryUrl: repositoryUrl,
-            projectName: projectName,
-            analysis: analysis,
-            dockerBuildStatus: dockerStatus,
-            containerStatus: containerStatus,
-            imageTag: imageTag,
-            containerId: containerId,
-            port: containerPort
+        const job = await pipelineQueue.add('analyze-repo', { repositoryUrl });
+        return res.status(202).json({
+            message: 'Pipeline job accepted',
+            jobId: job.id
         });
-
     } catch (error) {
         console.error('[ERROR] analyze route failed:', error);
-        return res.status(500).json({ error: error.message || 'Pipeline failed' });
-    } finally {
-        if (clonedPath) {
-            cleanupWorkspace(clonedPath);
-        }
+        return res.status(500).json({ error: error.message || 'Failed to enqueue job' });
     }
+});
+
+/**
+ * @route GET /api/repository/stream/:jobId
+ * @description Establishes an SSE connection for live updates on a specific job
+ */
+router.get('/stream/:jobId', (req, res) => {
+    const { jobId } = req.params;
+    sseService.addClient(jobId, req, res);
 });
 
 module.exports = router;

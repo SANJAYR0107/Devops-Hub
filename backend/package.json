@@ -11,8 +11,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bullmq": "^6.3.8",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "ioredis": "^6.0.0",
+    "uuid": "^14.0.2"
   }
 }

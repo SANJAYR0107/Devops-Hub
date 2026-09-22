@@ -24,7 +24,7 @@ function App() {
     setError(null)
     setLogs([])
 
-    addLog('Repository URL received')
+    addLog('Submitting repository for analysis...')
     
     try {
       const response = await fetch('http://localhost:5000/api/repository/analyze', {
@@ -36,23 +36,56 @@ function App() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze repository')
+        throw new Error(data.error || 'Failed to submit repository')
       }
 
-      addLog('Repository cloned')
-      addLog('Repository analyzed')
-      if (data.analysis?.technology) {
-          addLog(`${data.analysis.technology} project detected`)
-      }
-      if (data.analysis?.dockerfileExists) {
-          addLog('Dockerfile found')
-          addLog('Docker image build started')
-          if (data.dockerBuildStatus === 'SUCCESS') addLog('Docker image built successfully')
-          if (data.containerStatus === 'RUNNING') addLog('Container started')
+      const { jobId } = data;
+      addLog(`Job queued with ID: ${jobId}`)
+
+      // Establish SSE connection
+      const eventSource = new EventSource(`http://localhost:5000/api/repository/stream/${jobId}`)
+
+      eventSource.onmessage = (event) => {
+        const parsed = JSON.parse(event.data)
+
+        switch (parsed.type) {
+          case 'connected':
+            addLog('Connected to live log stream')
+            break
+          case 'status':
+            // Add a subtle log or status update
+            break
+          case 'progress':
+            // Can be used to update a progress bar if desired
+            break
+          case 'log':
+            addLog(parsed.message)
+            break
+          case 'complete':
+            setResult(parsed.result)
+            setStatus('Completed')
+            eventSource.close()
+            break
+          case 'error':
+            setError(parsed.message)
+            addError(parsed.message)
+            setStatus('Failed')
+            eventSource.close()
+            break
+          default:
+            break
+        }
       }
 
-      setResult(data)
-      setStatus('Completed')
+      eventSource.onerror = (err) => {
+        // Stop retrying if the backend closed it intentionally or it crashed
+        addError('SSE Connection lost.')
+        if (status !== 'Completed') {
+          setStatus('Failed')
+        }
+        eventSource.close()
+      }
+
     } catch (err) {
       setError(err.message)
       addError(err.message)

@@ -19,25 +19,27 @@ function getFreePort() {
  * Builds a Docker image for the given local path
  * @param {string} localPath 
  * @param {string} projectName 
+ * @param {function} logger Optional callback for streaming logs
  * @returns {Promise<string>} Image tag
  */
-function buildDockerImage(localPath, projectName) {
+function buildDockerImage(localPath, projectName, logger = console.log) {
     return new Promise((resolve, reject) => {
         const imageTag = `devopshub/${projectName.toLowerCase()}:local`;
-        console.log(`[INFO] Building Docker image ${imageTag}...`);
+        logger(`[INFO] Building Docker image ${imageTag}...`);
 
         const dockerBuild = spawn('docker', ['build', '-t', imageTag, '.'], {
             cwd: localPath
         });
 
-        dockerBuild.stdout.on('data', (data) => console.log(data.toString()));
-        dockerBuild.stderr.on('data', (data) => console.error(data.toString()));
+        dockerBuild.stdout.on('data', (data) => logger(data.toString().trim()));
+        dockerBuild.stderr.on('data', (data) => logger(data.toString().trim()));
 
         dockerBuild.on('close', (code) => {
             if (code === 0) {
-                console.log(`[INFO] Docker image built successfully: ${imageTag}`);
+                logger(`[INFO] Docker image built successfully: ${imageTag}`);
                 resolve(imageTag);
             } else {
+                logger(`[ERROR] Docker build failed with code ${code}`);
                 reject(new Error(`Docker build failed`));
             }
         });
@@ -48,13 +50,14 @@ function buildDockerImage(localPath, projectName) {
  * Runs a Docker container from the built image
  * @param {string} imageTag 
  * @param {string} projectName 
+ * @param {function} logger Optional callback for streaming logs
  * @returns {Promise<object>} Object containing container ID and mapped port
  */
-async function runDockerContainer(imageTag, projectName) {
+async function runDockerContainer(imageTag, projectName, logger = console.log) {
     const freePort = await getFreePort();
     return new Promise((resolve, reject) => {
         const containerName = `devopshub-container-${projectName.toLowerCase()}-${Date.now()}`;
-        console.log(`[INFO] Running Docker container ${containerName} on port ${freePort}...`);
+        logger(`[INFO] Running Docker container ${containerName} on port ${freePort}...`);
 
         // We run in detached mode, mapping port 8080 (assuming standard for now)
         // to the dynamically assigned host port.
@@ -65,11 +68,15 @@ async function runDockerContainer(imageTag, projectName) {
             imageTag
         ]);
 
+        dockerRun.stdout.on('data', (data) => logger(data.toString().trim()));
+        dockerRun.stderr.on('data', (data) => logger(data.toString().trim()));
+
         dockerRun.on('close', (code) => {
             if (code === 0) {
-                console.log(`[INFO] Container started successfully.`);
+                logger(`[INFO] Container started successfully.`);
                 resolve({ containerId: containerName, port: freePort });
             } else {
+                logger(`[ERROR] Container failed to start with code ${code}`);
                 reject(new Error(`Container failed to start`));
             }
         });
