@@ -35,6 +35,7 @@ router.post('/analyze', async (req, res) => {
         let containerStatus = 'Not Started';
         let imageTag = null;
         let containerId = null;
+        let containerPort = null;
 
         if (analysis.dockerfileExists) {
             // Feature 6: Docker Build
@@ -44,15 +45,14 @@ router.post('/analyze', async (req, res) => {
 
             // Feature 7: Docker Run
             containerStatus = 'Starting';
-            containerId = await runDockerContainer(imageTag, projectName);
+            const runResult = await runDockerContainer(imageTag, projectName);
+            containerId = runResult.containerId;
+            containerPort = runResult.port;
             containerStatus = 'RUNNING';
         } else {
             dockerStatus = 'Skipped (No Dockerfile)';
         }
 
-        // We skip cleanup for now so the container can keep running or so we can inspect it.
-        // In a real scenario, we might want to clean up depending on the retention policy.
-        
         return res.status(200).json({
             message: 'Pipeline completed',
             repositoryUrl: repositoryUrl,
@@ -61,13 +61,17 @@ router.post('/analyze', async (req, res) => {
             dockerBuildStatus: dockerStatus,
             containerStatus: containerStatus,
             imageTag: imageTag,
-            containerId: containerId
+            containerId: containerId,
+            port: containerPort
         });
 
     } catch (error) {
         console.error('[ERROR] analyze route failed:', error);
-        // if (clonedPath) cleanupWorkspace(clonedPath);
         return res.status(500).json({ error: error.message || 'Pipeline failed' });
+    } finally {
+        if (clonedPath) {
+            cleanupWorkspace(clonedPath);
+        }
     }
 });
 

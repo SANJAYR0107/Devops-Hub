@@ -1,4 +1,19 @@
 const { spawn } = require('child_process');
+const net = require('net');
+
+function getFreePort() {
+    return new Promise((resolve, reject) => {
+        const srv = net.createServer();
+        srv.listen(0, () => {
+            const port = srv.address().port;
+            srv.close((err) => {
+                if (err) reject(err);
+                else resolve(port);
+            });
+        });
+        srv.on('error', reject);
+    });
+}
 
 /**
  * Builds a Docker image for the given local path
@@ -33,26 +48,27 @@ function buildDockerImage(localPath, projectName) {
  * Runs a Docker container from the built image
  * @param {string} imageTag 
  * @param {string} projectName 
- * @returns {Promise<string>} Container ID
+ * @returns {Promise<object>} Object containing container ID and mapped port
  */
-function runDockerContainer(imageTag, projectName) {
+async function runDockerContainer(imageTag, projectName) {
+    const freePort = await getFreePort();
     return new Promise((resolve, reject) => {
-        const containerName = `devopshub-container-${projectName.toLowerCase()}`;
-        console.log(`[INFO] Running Docker container ${containerName}...`);
+        const containerName = `devopshub-container-${projectName.toLowerCase()}-${Date.now()}`;
+        console.log(`[INFO] Running Docker container ${containerName} on port ${freePort}...`);
 
         // We run in detached mode, mapping port 8080 (assuming standard for now)
-        // In the future, port should be dynamically detected.
+        // to the dynamically assigned host port.
         const dockerRun = spawn('docker', [
             'run', '-d', 
             '--name', containerName, 
-            '-p', '8080:8080', 
+            '-p', `${freePort}:8080`, 
             imageTag
         ]);
 
         dockerRun.on('close', (code) => {
             if (code === 0) {
                 console.log(`[INFO] Container started successfully.`);
-                resolve(containerName);
+                resolve({ containerId: containerName, port: freePort });
             } else {
                 reject(new Error(`Container failed to start`));
             }

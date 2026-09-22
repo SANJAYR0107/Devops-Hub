@@ -117,6 +117,12 @@ function App() {
                   <span className="stat-label">Container:</span>
                   <span className="stat-value">{result.containerStatus}</span>
                 </div>
+                {result.port && (
+                  <div className="stat-row">
+                    <span className="stat-label">Port:</span>
+                    <span className="stat-value">{result.port}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="placeholder-text">Submit a repository to view analysis</p>
